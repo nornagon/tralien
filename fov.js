@@ -1,8 +1,37 @@
+/**
+ * fov.js: tile-based field of vision calculations
+ * Translated from libfov: http://code.google.com/p/libfov/
+ *
+ * Usage:
+ *  var fov_settings = {
+ *  	shape: fov.SHAPE_CIRCLE,
+ *  	opaque: function (map, x, y) { return isOpaque(map.at(x,y)); },
+ *    apply: function (map, x, y, sx, sy) { map.at(x,y).visible = true; },
+ *  	opaque_apply: true,
+ *  };
+ *  fov.circle(fov_settings, map, game.player.x, game.player.y, 30);
+ *
+ * shape must be in {SHAPE_CIRCLE, SHAPE_OCTAGON}.
+ * opaque is a function to determine whether a given tile is opaque or not.
+ * apply is a function that will be called on cells calculated to be visible.
+ * apply will be called on opaque squares if and only if opaque_apply is true.
+ *
+ * the arguments to apply are:
+ *  - map: the 'map' variable that was passed to fov.circle
+ *  - x, y: the co-ordinates of the square that's been calculated as visible
+ *  - sx, sy: the co-ordinates of the source of light
+ */
+
+fov = (function () {
+
 var FLT_EPSILON = 1e-8;
+
 var FOV_SHAPE_CIRCLE_PRECALCULATE = 0;
 var FOV_SHAPE_CIRCLE = 1;
 var FOV_SHAPE_OCTAGON = 2;
 var FOV_OPAQUE_APPLY = 1;
+
+// TODO: SHAPE_CIRCLE_PRECALCULATE still hasn't been translated over.
 
 function fov_slope(dx, dy) {
 	if (dx <= -FLT_EPSILON || dx >= FLT_EPSILON) {
@@ -59,10 +88,8 @@ function fov_octant(settings, data, signx, signy, rx, ry, apply_edge, apply_diag
 	for (dy = dy0; dy <= dy1; ++dy) {
 		p[ry] = data.source[ry] + signy * dy;
 		if (settings.opaque(data.map, p[0], p[1])) {
-			if (settings.opaque_apply == FOV_OPAQUE_APPLY && (apply_edge || dy > 0)) {
-				settings.apply(data.map, p[0], p[1],
-											 p[0] - data.source[0], p[1] - data.source[1],
-											 data.source);
+			if (settings.opaque_apply && (apply_edge || dy > 0)) {
+				settings.apply(data.map, p[0], p[1], data.source[0], data.source[1]);
 			}
 			if (prev_blocked == 0) {
 				end_slope_next = fov_slope(dx + 0.5, dy - 0.5);
@@ -103,7 +130,7 @@ function _fov_circle(settings, data) {
  * settings = {
  *   shape: FOV_SHAPE_CIRCLE,
  *   opaque: function (map, x, y) { return true; },
- *   opaque_apply: FOV_OPAQUE_APPLY,
+ *   opaque_apply: true,
  *   apply: function (map, x, y, sx, sy, s) { }
  * }
  */
@@ -116,3 +143,12 @@ function fov_circle(settings, map, source_x, source_y, radius) {
 	}
 	_fov_circle(settings, data);
 }
+
+return {
+	circle: fov_circle,
+	//SHAPE_CIRCLE_PRECALCULATE: FOV_SHAPE_CIRCLE_PRECALCULATE,
+	SHAPE_CIRCLE: FOV_SHAPE_CIRCLE,
+	SHAPE_OCTAGON: FOV_SHAPE_OCTAGON,
+};
+
+})();
