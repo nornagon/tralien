@@ -1,29 +1,9 @@
-require(['util.js','tileset.js','map.js','monster.js'], function () {
+require(['util.js','tileset.js','map.js','fov.js','monster.js'], function () {
+	setTimeout(function(){
 	if (document.loaded) { begin(); }
 	else { document.observe('load', begin); }
+	},0);
 });
-
-game = {
-	map: {
-		width: null, height: null,
-		tiles: [],
-		at: function (x,y) {
-			return this.tiles[y*this.width+x];
-		},
-		draw: function () {
-			var ctx = game.canvas.getContext('2d');
-			ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
-			for (var i = 0; i < this.tiles.length; i++) {
-				this.tiles[i].visible = false;
-			}
-			fov_circle(fov_settings, this, game.player.x, game.player.y, 30);
-			game.map.at(game.player.x, game.player.y).visible = true;
-			for (var i = 0; i < this.tiles.length; i++) {
-				this.tiles[i].draw(ctx);
-			}
-		}
-	},
-};
 
 function action(x,y) {
 	// perform an action at (x,y)
@@ -50,15 +30,39 @@ function ctrlAction(dir) {
 	}
 }
 
-var fov_settings = {
-	shape: FOV_SHAPE_CIRCLE,
-	opaque: function (map, x, y) { return !walkable(map.at(x,y).type); },
-	opaque_apply: FOV_OPAQUE_APPLY,
-	apply: function (map, x, y, sx, sy, s) { map.at(x,y).visible = true; }
-};
-
 function begin () {
 	console.log('begin()');
+
+	var fov_settings = {
+		shape: fov.SHAPE_CIRCLE,
+		opaque: function (map, x, y) { return !walkable(map.at(x,y).type); },
+		opaque_apply: true,
+		apply: function (map, x, y, sx, sy) { map.at(x,y).visible = true; }
+	};
+
+	// global
+	game = {
+		map: {
+			width: null, height: null,
+			tiles: [],
+			at: function (x,y) {
+				return this.tiles[y*this.width+x];
+			},
+			draw: function () {
+				var ctx = game.canvas.getContext('2d');
+				ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
+				for (var i = 0; i < this.tiles.length; i++) {
+					this.tiles[i].visible = false;
+				}
+				fov.circle(fov_settings, this, game.player.x, game.player.y, 30);
+				game.map.at(game.player.x, game.player.y).visible = true;
+				for (var i = 0; i < this.tiles.length; i++) {
+					this.tiles[i].draw(ctx);
+				}
+			}
+		},
+	};
+
 	game.canvas = $('canvas');
 	game.map.width = Math.floor(game.canvas.width/8);
 	game.map.height = Math.floor(game.canvas.height/8);
