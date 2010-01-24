@@ -1,7 +1,7 @@
 require(['util.js','tileset.js','map.js','fov.js','monster.js'], function () {
 	setTimeout(function(){
-	if (document.loaded) { begin(); }
-	else { document.observe('load', begin); }
+		if (document.loaded) { begin(); }
+		else { document.observe('load', begin); }
 	},0);
 });
 
@@ -20,52 +20,45 @@ function action(x,y) {
 }
 
 function ctrlAction(dir) {
-	var x = game.player.x + deltaX(dir);
-	var y = game.player.y + deltaY(dir);
-	if (game.map.at(x,y).type == 'vdoor') {
-		game.map.at(x,y).type = 'vdoor-closed';
-	}
-	if (game.map.at(x,y).type == 'hdoor') {
-		game.map.at(x,y).type = 'hdoor-closed';
-	}
+	var dx = deltaX(dir);
+	var dy = deltaY(dir);
 }
 
-function begin () {
-	console.log('begin()');
+// global
+game = {
+	map: {
+		width: null, height: null,
+		tiles: [],
+		at: function (x,y) {
+			return this.tiles[y*this.width+x];
+		},
+		draw: function () {
+			var ctx = game.canvas.getContext('2d');
+			ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
+			for (var i = 0; i < this.tiles.length; i++) {
+				this.tiles[i].visible = false;
+			}
+			fov.circle(game.fov_settings, this, game.player.x, game.player.y, 30);
+			game.map.at(game.player.x, game.player.y).visible = true;
+			for (var i = 0; i < this.tiles.length; i++) {
+				this.tiles[i].draw(ctx);
+			}
+		}
+	},
+	fov_settings: null, // to be set up once fov.js is loaded.
+};
 
-	var fov_settings = {
+function begin () {
+	game.fov_settings = {
 		shape: fov.SHAPE_CIRCLE,
 		opaque: function (map, x, y) { return !walkable(map.at(x,y).type); },
 		opaque_apply: true,
 		apply: function (map, x, y, sx, sy) { map.at(x,y).visible = true; }
 	};
 
-	// global
-	game = {
-		map: {
-			width: null, height: null,
-			tiles: [],
-			at: function (x,y) {
-				return this.tiles[y*this.width+x];
-			},
-			draw: function () {
-				var ctx = game.canvas.getContext('2d');
-				ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
-				for (var i = 0; i < this.tiles.length; i++) {
-					this.tiles[i].visible = false;
-				}
-				fov.circle(fov_settings, this, game.player.x, game.player.y, 30);
-				game.map.at(game.player.x, game.player.y).visible = true;
-				for (var i = 0; i < this.tiles.length; i++) {
-					this.tiles[i].draw(ctx);
-				}
-			}
-		},
-	};
-
 	game.canvas = $('canvas');
-	game.map.width = Math.floor(game.canvas.width/8);
-	game.map.height = Math.floor(game.canvas.height/8);
+	game.map.width = Math.floor(game.canvas.width/tileset.tilewidth);
+	game.map.height = Math.floor(game.canvas.height/tileset.tileheight);
 	for (var y = 0; y < game.map.height; y++) {
 		for (var x = 0; x < game.map.width; x++) {
 			game.map.tiles[y*game.map.width+x] = new Tile(x,y);

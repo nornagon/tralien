@@ -1,5 +1,6 @@
 var tileset = {
 	imagesrc: "lofi_1bit_scifi_a.png", width: 136, height: 352,
+	tilewidth: 8, tileheight: 8,
 	tiles: {
 		'ul': [5,2], 'u': [6,2], 'ur': [13,2],
 		'l' : [5,3],             'r' : [13,3],
@@ -20,5 +21,4 @@ var tileset = {
 	},
 };
 tileset.image = new Image(tileset.width, tileset.height);
-tileset.image.observe('load', function () { console.log('blah'); });
 tileset.image.src = tileset.imagesrc;

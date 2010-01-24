@@ -10,6 +10,7 @@ function deltaY(dir) {
 	return 0;
 }
 
+var walkable = (function () {
 var _unwalkableTypes =
 ['ul','u','ur','l','r','bl','b','br',
  'vdoor-closed','hdoor-closed',
@@ -18,9 +19,10 @@ var unwalkableTypes = {};
 for (var i in _unwalkableTypes) {
 	unwalkableTypes[_unwalkableTypes[i]] = true;
 }
-function walkable(type) {
+return (function walkable(type) {
 	return !unwalkableTypes[type];
-}
+});
+})();
 
 function Tile(x_, y_, type_) {
 	var x = x_, y = y_;
